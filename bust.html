@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROMULUS 🏛️</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000000;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+            cursor: none;
+        }
+        
+        #canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #cursor {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            background: rgba(0, 255, 136, 0.6);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 100;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+        }
+        
+        #title {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+            letter-spacing: 8px;
+            z-index: 10;
+            text-align: center;
+            font-weight: 300;
+        }
+    </style>
+</head>
+<body>
+    <div id="cursor"></div>
+    <canvas id="canvas"></canvas>
+    <div id="title">ROMULUS · CONSIGLIERE · BUILDER</div>
+    
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    
+    <script type="module">
+        import * as THREE from 'three';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        
+        // Mouse tracking
+        const mouse = { x: 0, y: 0 };
+        const cursor = document.getElementById('cursor');
+        
+        document.addEventListener('mousemove', (e) => {
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+        
+        // Scene setup
+        const canvas = document.getElementById('canvas');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x000000);
+        
+        // Camera
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 0, 7);
+        
+        // Renderer
+        const renderer = new THREE.WebGLRenderer({ 
+            canvas, 
+            antialias: true,
+            alpha: false
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
+        
+        // Post-processing (minimal bloom - eyes only)
+        const composer = new EffectComposer(renderer);
+        composer.addPass(new RenderPass(scene, camera));
+        
+        const bloomPass = new UnrealBloomPass(
+            new THREE.Vector2(window.innerWidth, window.innerHeight),
+            0.6,    // strength (subtle)
+            0.4,    // radius
+            0.85    // threshold (only eyes)
+        );
+        composer.addPass(bloomPass);
+        
+        // Minimal lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        
+        // Key light (subtle, from upper left)
+        const keyLight = new THREE.DirectionalLight(0xffffff, 0.4);
+        keyLight.position.set(-3, 5, 3);
+        scene.add(keyLight);
+        
+        // Rim light (emerald accent, from behind)
+        const rimLight = new THREE.PointLight(0x00ff88, 0.4, 15);
+        rimLight.position.set(0, 0, -3);
+        scene.add(rimLight);
+        
+        // Load matcap texture (pearl/marble)
+        const textureLoader = new THREE.TextureLoader();
+        const matcapTexture = textureLoader.load(
+            'https://raw.githubusercontent.com/nidorx/matcaps/master/1024/E6BF3C_5A4719_977726_CAAD49-1024px.png'
+        );
+        
+        // Materials
+        const marbleMaterial = new THREE.MeshMatcapMaterial({
+            matcap: matcapTexture,
+            color: 0xffffff
+        });
+        
+        const eyeMaterial = new THREE.MeshStandardMaterial({
+            color: 0x00ff88,
+            emissive: 0x00ff88,
+            emissiveIntensity: 3.0,
+            roughness: 0.2,
+            metalness: 0.1
+        });
+        
+        // Build the bust
+        const bust = new THREE.Group();
+        
+        // Head
+        const headGeometry = new THREE.SphereGeometry(1, 64, 64);
+        headGeometry.scale(0.88, 1, 1);
+        const head = new THREE.Mesh(headGeometry, marbleMaterial);
+        bust.add(head);
+        
+        // Jaw/chin
+        const jawGeometry = new THREE.SphereGeometry(0.75, 64, 64);
+        jawGeometry.scale(0.92, 1.2, 0.92);
+        const jaw = new THREE.Mesh(jawGeometry, marbleMaterial);
+        jaw.position.y = -0.75;
+        bust.add(jaw);
+        
+        // Nose
+        const noseGeometry = new THREE.CylinderGeometry(0.12, 0.16, 0.6, 16);
+        const nose = new THREE.Mesh(noseGeometry, marbleMaterial);
+        nose.position.set(0, 0.1, 0.95);
+        nose.rotation.x = Math.PI / 2;
+        bust.add(nose);
+        
+        // Eyes (emerald spheres)
+        const eyeGeometry = new THREE.SphereGeometry(0.1, 32, 32);
+        
+        const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+        leftEye.position.set(-0.3, 0.25, 0.85);
+        bust.add(leftEye);
+        
+        const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+        rightEye.position.set(0.3, 0.25, 0.85);
+        bust.add(rightEye);
+        
+        // Eye lights
+        const leftEyeLight = new THREE.PointLight(0x00ff88, 1.2, 2.5);
+        leftEyeLight.position.copy(leftEye.position);
+        bust.add(leftEyeLight);
+        
+        const rightEyeLight = new THREE.PointLight(0x00ff88, 1.2, 2.5);
+        rightEyeLight.position.copy(rightEye.position);
+        bust.add(rightEyeLight);
+        
+        // Hair (top of head)
+        const hairGeometry = new THREE.SphereGeometry(1.05, 64, 64, 0, Math.PI * 2, 0, Math.PI * 0.55);
+        hairGeometry.scale(0.9, 1, 1);
+        const hair = new THREE.Mesh(hairGeometry, marbleMaterial);
+        hair.position.y = 0.3;
+        bust.add(hair);
+        
+        // Beard
+        const beardGeometry = new THREE.SphereGeometry(0.65, 64, 64, 0, Math.PI * 2, Math.PI * 0.4, Math.PI * 0.6);
+        const beard = new THREE.Mesh(beardGeometry, marbleMaterial);
+        beard.position.set(0, -0.55, 0.3);
+        beard.scale.set(1, 1.25, 0.85);
+        bust.add(beard);
+        
+        // Laurel wreath (simple torus)
+        const wreathGeometry = new THREE.TorusGeometry(0.95, 0.06, 16, 48, Math.PI * 1.4);
+        const wreath = new THREE.Mesh(wreathGeometry, marbleMaterial);
+        wreath.rotation.x = -Math.PI / 12;
+        wreath.position.y = 0.75;
+        bust.add(wreath);
+        
+        // Neck
+        const neckGeometry = new THREE.CylinderGeometry(0.45, 0.55, 1.1, 32);
+        const neck = new THREE.Mesh(neckGeometry, marbleMaterial);
+        neck.position.y = -1.7;
+        bust.add(neck);
+        
+        // Shoulders/base
+        const shoulderGeometry = new THREE.CylinderGeometry(1.4, 1.8, 0.8, 32);
+        const shoulders = new THREE.Mesh(shoulderGeometry, marbleMaterial);
+        shoulders.position.y = -2.5;
+        bust.add(shoulders);
+        
+        scene.add(bust);
+        
+        // Sparse constellation background (25 stars)
+        const starCount = 25;
+        const starGeometry = new THREE.BufferGeometry();
+        const starPositions = new Float32Array(starCount * 3);
+        
+        for (let i = 0; i < starCount; i++) {
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(Math.random() * 2 - 1);
+            const radius = 15 + Math.random() * 10;
+            
+            starPositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+            starPositions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+            starPositions[i * 3 + 2] = radius * Math.cos(phi);
+        }
+        
+        starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+        
+        const starMaterial = new THREE.PointsMaterial({
+            color: 0xffffff,
+            size: 0.05,
+            transparent: true,
+            opacity: 0.6
+        });
+        
+        const stars = new THREE.Points(starGeometry, starMaterial);
+        scene.add(stars);
+        
+        // Animation
+        let time = 0;
+        let blinkTimer = 0;
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.005;
+            
+            // Subtle breathing (float up/down)
+            bust.position.y = Math.sin(time * 0.8) * 0.08;
+            
+            // Very subtle head turn
+            bust.rotation.y = Math.sin(time * 0.3) * 0.03;
+            
+            // Eyes track mouse
+            const eyeTarget = new THREE.Vector3(
+                mouse.x * 2,
+                mouse.y * 1.5,
+                5
+            );
+            
+            leftEye.lookAt(eyeTarget);
+            rightEye.lookAt(eyeTarget);
+            
+            // Eye glow pulse (subtle)
+            const glowIntensity = 1.0 + Math.sin(time * 2) * 0.2;
+            leftEyeLight.intensity = glowIntensity;
+            rightEyeLight.intensity = glowIntensity;
+            
+            // Blinking (occasional)
+            blinkTimer++;
+            if (blinkTimer > 300 && blinkTimer < 310) {
+                leftEye.scale.y = 0.2;
+                rightEye.scale.y = 0.2;
+            } else {
+                leftEye.scale.y = 1;
+                rightEye.scale.y = 1;
+            }
+            if (blinkTimer > 450) blinkTimer = Math.random() * 100;
+            
+            // Stars slowly rotate
+            stars.rotation.y += 0.0001;
+            
+            composer.render();
+        }
+        
+        // Handle resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        animate();
+    </script>
+</body>
+</html>
