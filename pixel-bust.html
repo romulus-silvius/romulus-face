@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROMULUS 🏛️</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000000;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        
+        #container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #canvas {
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            max-width: 90vw;
+            max-height: 80vh;
+            filter: drop-shadow(0 0 40px rgba(0, 255, 136, 0.3));
+        }
+        
+        #title {
+            margin-top: 40px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+            letter-spacing: 8px;
+            text-align: center;
+            font-weight: 300;
+        }
+        
+        #stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="stars"></canvas>
+    <div id="container">
+        <canvas id="canvas"></canvas>
+        <div id="title">ROMULUS · CONSIGLIERE · BUILDER</div>
+    </div>
+    
+    <script>
+        // Pixel art bust renderer
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // High resolution pixel art (will be scaled up with crisp-edges)
+        const width = 256;
+        const height = 320;
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Scale up for display
+        canvas.style.width = (width * 3) + 'px';
+        canvas.style.height = (height * 3) + 'px';
+        
+        // Color palette - marble whites/grays + emerald accent
+        const colors = {
+            bg: '#000000',
+            marble: {
+                highlight: '#ffffff',
+                light: '#f5f5f0',
+                mid: '#d4d4ce',
+                shadow: '#a8a8a0',
+                dark: '#7a7a72'
+            },
+            emerald: {
+                bright: '#00ff88',
+                glow: '#00cc66',
+                dark: '#008844'
+            }
+        };
+        
+        // Mouse tracking for eye glow
+        let mouseX = 0.5;
+        let mouseY = 0.5;
+        
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX / window.innerWidth;
+            mouseY = e.clientY / window.innerHeight;
+        });
+        
+        // Draw detailed pixel art bust
+        function drawBust(time) {
+            // Clear
+            ctx.fillStyle = colors.bg;
+            ctx.fillRect(0, 0, width, height);
+            
+            // Breathing offset
+            const breathe = Math.sin(time * 0.0006) * 2;
+            
+            // Base position
+            const baseY = 60 + breathe;
+            
+            // Shoulders/base (wide marble pedestal)
+            ctx.fillStyle = colors.marble.mid;
+            ctx.fillRect(48, baseY + 200, 160, 80);
+            
+            // Shoulder highlights
+            ctx.fillStyle = colors.marble.light;
+            ctx.fillRect(48, baseY + 200, 160, 12);
+            ctx.fillStyle = colors.marble.highlight;
+            ctx.fillRect(52, baseY + 202, 150, 4);
+            
+            // Shoulder shadows
+            ctx.fillStyle = colors.marble.shadow;
+            ctx.fillRect(48, baseY + 268, 160, 12);
+            ctx.fillStyle = colors.marble.dark;
+            ctx.fillRect(48, baseY + 274, 160, 6);
+            
+            // Neck
+            ctx.fillStyle = colors.marble.mid;
+            ctx.fillRect(98, baseY + 150, 60, 52);
+            
+            // Neck highlights
+            ctx.fillStyle = colors.marble.light;
+            ctx.fillRect(98, baseY + 150, 60, 8);
+            ctx.fillRect(98, baseY + 150, 12, 52);
+            
+            // Neck shadows
+            ctx.fillStyle = colors.marble.shadow;
+            ctx.fillRect(146, baseY + 150, 12, 52);
+            ctx.fillRect(98, baseY + 194, 60, 8);
+            
+            // Head (main sphere - built from rectangles for pixel art)
+            ctx.fillStyle = colors.marble.mid;
+            ctx.fillRect(78, baseY + 60, 100, 100);
+            
+            // Head shaping (rounded edges)
+            ctx.fillRect(68, baseY + 75, 10, 70);
+            ctx.fillRect(178, baseY + 75, 10, 70);
+            ctx.fillRect(73, baseY + 70, 5, 80);
+            ctx.fillRect(178, baseY + 70, 5, 80);
+            ctx.fillRect(75, baseY + 65, 3, 90);
+            ctx.fillRect(178, baseY + 65, 3, 90);
+            
+            // Head highlights (left side, light source)
+            ctx.fillStyle = colors.marble.light;
+            ctx.fillRect(78, baseY + 60, 50, 100);
+            ctx.fillStyle = colors.marble.highlight;
+            ctx.fillRect(82, baseY + 65, 30, 85);
+            ctx.fillRect(86, baseY + 70, 20, 75);
+            
+            // Head shadows (right side)
+            ctx.fillStyle = colors.marble.shadow;
+            ctx.fillRect(148, baseY + 60, 30, 100);
+            ctx.fillRect(153, baseY + 75, 25, 70);
+            ctx.fillStyle = colors.marble.dark;
+            ctx.fillRect(165, baseY + 80, 13, 60);
+            
+            // Jaw/chin
+            ctx.fillStyle = colors.marble.mid;
+            ctx.fillRect(88, baseY + 140, 80, 30);
+            
+            // Jaw highlights
+            ctx.fillStyle = colors.marble.light;
+            ctx.fillRect(88, baseY + 140, 40, 30);
+            ctx.fillStyle = colors.marble.highlight;
+            ctx.fillRect(92, baseY + 142, 25, 24);
+            
+            // Jaw shadows
+            ctx.fillStyle = colors.marble.shadow;
+            ctx.fillRect(138, baseY + 140, 30, 30);
+            ctx.fillStyle = colors.marble.dark;
+            ctx.fillRect(150, baseY + 145, 18, 20);
+            
+            // Nose (simple protrusion)
+            ctx.fillStyle = colors.marble.light;
+            ctx.fillRect(118, baseY + 105, 20, 25);
+            ctx.fillStyle = colors.marble.highlight;
+            ctx.fillRect(120, baseY + 108, 10, 20);
+            ctx.fillStyle = colors.marble.shadow;
+            ctx.fillRect(135, baseY + 110, 3, 15);
+            
+            // Beard (textured lower face)
+            ctx.fillStyle = colors.marble.shadow;
+            ctx.fillRect(95, baseY + 155, 66, 25);
+            ctx.fillStyle = colors.marble.dark;
+            // Beard texture (vertical lines)
+            for (let i = 0; i < 10; i++) {
+                ctx.fillRect(98 + i * 6, baseY + 158, 2, 18);
+            }
+            
+            // Hair (crown of head)
+            ctx.fillStyle = colors.marble.shadow;
+            ctx.fillRect(78, baseY + 50, 100, 20);
+            ctx.fillRect(73, baseY + 55, 110, 15);
+            ctx.fillStyle = colors.marble.dark;
+            // Hair texture
+            for (let i = 0; i < 16; i++) {
+                ctx.fillRect(76 + i * 6, baseY + 52, 3, 16);
+            }
+            
+            // Laurel wreath (golden accent)
+            ctx.fillStyle = colors.marble.light;
+            ctx.fillRect(70, baseY + 65, 116, 8);
+            ctx.fillStyle = colors.marble.highlight;
+            // Wreath leaves (small rectangles)
+            for (let i = 0; i < 20; i++) {
+                const x = 72 + i * 5.5;
+                const leafY = baseY + 66 + Math.sin(i * 0.3) * 2;
+                ctx.fillRect(x, leafY, 4, 5);
+            }
+            
+            // Eyes (emerald glow - the focal point)
+            const eyeGlow = 0.7 + Math.sin(time * 0.002) * 0.3;
+            
+            // Left eye
+            ctx.fillStyle = colors.emerald.dark;
+            ctx.fillRect(95, baseY + 95, 14, 10);
+            ctx.fillStyle = colors.emerald.glow;
+            ctx.fillRect(97, baseY + 96, 10, 8);
+            ctx.fillStyle = colors.emerald.bright;
+            const leftGlowSize = Math.floor(6 * eyeGlow);
+            ctx.fillRect(99, baseY + 97, leftGlowSize, 6);
+            
+            // Left eye glow effect
+            ctx.globalAlpha = 0.4 * eyeGlow;
+            ctx.fillStyle = colors.emerald.bright;
+            ctx.fillRect(93, baseY + 93, 18, 14);
+            ctx.globalAlpha = 0.2 * eyeGlow;
+            ctx.fillRect(90, baseY + 90, 24, 20);
+            ctx.globalAlpha = 1.0;
+            
+            // Right eye
+            ctx.fillStyle = colors.emerald.dark;
+            ctx.fillRect(147, baseY + 95, 14, 10);
+            ctx.fillStyle = colors.emerald.glow;
+            ctx.fillRect(149, baseY + 96, 10, 8);
+            ctx.fillStyle = colors.emerald.bright;
+            const rightGlowSize = Math.floor(6 * eyeGlow);
+            ctx.fillRect(151, baseY + 97, rightGlowSize, 6);
+            
+            // Right eye glow effect
+            ctx.globalAlpha = 0.4 * eyeGlow;
+            ctx.fillStyle = colors.emerald.bright;
+            ctx.fillRect(145, baseY + 93, 18, 14);
+            ctx.globalAlpha = 0.2 * eyeGlow;
+            ctx.fillRect(142, baseY + 90, 24, 20);
+            ctx.globalAlpha = 1.0;
+            
+            // Blinking (occasional)
+            const blinkPhase = (time % 6000);
+            if (blinkPhase > 5800 && blinkPhase < 5950) {
+                // Draw closed eyes (dark horizontal lines)
+                ctx.fillStyle = colors.marble.dark;
+                ctx.fillRect(95, baseY + 100, 14, 2);
+                ctx.fillRect(147, baseY + 100, 14, 2);
+            }
+        }
+        
+        // Stars background
+        const starsCanvas = document.getElementById('stars');
+        const starsCtx = starsCanvas.getContext('2d');
+        starsCanvas.width = window.innerWidth;
+        starsCanvas.height = window.innerHeight;
+        
+        const stars = [];
+        for (let i = 0; i < 30; i++) {
+            stars.push({
+                x: Math.random() * window.innerWidth,
+                y: Math.random() * window.innerHeight,
+                size: Math.random() * 2 + 1,
+                opacity: Math.random() * 0.5 + 0.3
+            });
+        }
+        
+        function drawStars() {
+            starsCtx.clearRect(0, 0, starsCanvas.width, starsCanvas.height);
+            stars.forEach(star => {
+                starsCtx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+                starsCtx.fillRect(star.x, star.y, star.size, star.size);
+            });
+        }
+        
+        drawStars();
+        
+        // Animation loop
+        let startTime = Date.now();
+        
+        function animate() {
+            const time = Date.now() - startTime;
+            drawBust(time);
+            requestAnimationFrame(animate);
+        }
+        
+        animate();
+        
+        // Handle resize
+        window.addEventListener('resize', () => {
+            starsCanvas.width = window.innerWidth;
+            starsCanvas.height = window.innerHeight;
+            stars.forEach(star => {
+                star.x = Math.random() * window.innerWidth;
+                star.y = Math.random() * window.innerHeight;
+            });
+            drawStars();
+        });
+        
+        console.log('Romulus pixel bust loaded');
+    </script>
+</body>
+</html>
