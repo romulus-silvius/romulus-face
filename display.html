@@ -184,13 +184,12 @@
         </div>
         
         <!-- BUST IMAGE GOES HERE -->
-        <!-- Replace placeholder with actual bust image -->
         <div id="bust-container">
-            <!-- <img id="bust" src="romulus-bust.png" alt="Romulus Bust"> -->
-            <!-- <canvas id="eye-glow"></canvas> -->
+            <img id="bust" src="romulus-bust.png" alt="Romulus Bust">
+            <canvas id="eye-glow"></canvas>
             
             <!-- PLACEHOLDER (remove when image ready) -->
-            <div id="placeholder">
+            <div id="placeholder" style="display:none;">
                 <h2>BUST IMAGE PLACEHOLDER</h2>
                 <p>
                     Replace this with a high-quality AI-generated or commissioned Roman marble bust.
@@ -230,8 +229,6 @@
         }
         
         // Eye glow effect (when image is loaded)
-        // Uncomment when bust image is added
-        /*
         const canvas = document.getElementById('eye-glow');
         const ctx = canvas.getContext('2d');
         const bust = document.getElementById('bust');
@@ -279,7 +276,6 @@
             
             drawEyeGlow();
         });
-        */
     </script>
 </body>
 </html>
