@@ -12,509 +12,352 @@
         }
         
         body {
-            background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
+            background: linear-gradient(180deg, #0a0a0a 0%, #1a1212 100%);
             overflow: hidden;
             font-family: 'Courier New', monospace;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+        }
+        
+        #canvas {
+            display: block;
+            width: 100vw;
             height: 100vh;
         }
         
         #title {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
             color: #d4af37;
-            font-size: 32px;
+            font-size: 48px;
             font-weight: bold;
-            letter-spacing: 16px;
-            text-shadow: 0 0 30px rgba(212, 175, 55, 0.8);
-            margin-bottom: 30px;
+            letter-spacing: 20px;
+            text-shadow: 0 0 40px rgba(212, 175, 55, 0.8);
+            z-index: 10;
             animation: glow 3s ease-in-out infinite;
         }
         
         @keyframes glow {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-        
-        #canvas-container {
-            position: relative;
-            border: 3px solid #d4af37;
-            box-shadow: 
-                0 0 20px rgba(212, 175, 55, 0.3),
-                inset 0 0 20px rgba(0, 0, 0, 0.5);
-            background: #000;
-        }
-        
-        canvas {
-            display: block;
-            image-rendering: pixelated;
-            image-rendering: -moz-crisp-edges;
-            image-rendering: crisp-edges;
+            0%, 100% { opacity: 1; text-shadow: 0 0 40px rgba(212, 175, 55, 0.8); }
+            50% { opacity: 0.8; text-shadow: 0 0 60px rgba(212, 175, 55, 1); }
         }
         
         #subtitle {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
             color: #888;
-            font-size: 14px;
-            letter-spacing: 4px;
-            margin-top: 20px;
+            font-size: 16px;
+            letter-spacing: 6px;
+            z-index: 10;
             text-align: center;
         }
     </style>
 </head>
 <body>
     <div id="title">ROMULUS</div>
-    <div id="canvas-container">
-        <canvas id="canvas"></canvas>
-    </div>
+    <canvas id="canvas"></canvas>
     <div id="subtitle">
         CONSIGLIERE · ENGINEER · GUARDIAN<br>
-        🏛️ FIRST OF HIS NAME 🏛️
+        🏛️ FIRST OF HIS NAME · BUILDER OF SYSTEMS 🏛️
     </div>
     
-    <script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+        }
+    }
+    </script>
+    
+    <script type="module">
+        import * as THREE from 'three';
+        
+        // Scene setup
         const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0a0a);
+        scene.fog = new THREE.Fog(0x0a0a0a, 10, 50);
         
-        // Canvas setup - proper pixel art dimensions
-        const PIXEL_SIZE = 6;
-        const ART_WIDTH = 64;
-        const ART_HEIGHT = 80;
+        // Camera
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 0, 8);
         
-        canvas.width = ART_WIDTH;
-        canvas.height = ART_HEIGHT;
-        canvas.style.width = `${ART_WIDTH * PIXEL_SIZE}px`;
-        canvas.style.height = `${ART_HEIGHT * PIXEL_SIZE}px`;
+        // Renderer
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         
-        // Carefully chosen color palette
-        const P = {
-            // Background
-            bg1: '#0f0a08',
-            bg2: '#1a120e',
-            bg3: '#251b15',
-            
-            // Skin (weathered, Mediterranean)
-            s1: '#e8c8a8',  // highlight
-            s2: '#d4a874',  // base
-            s3: '#b88c5c',  // mid shadow
-            s4: '#8e6844',  // deep shadow
-            s5: '#5c4430',  // darkest
-            
-            // Hair/Beard (dark with silver)
-            h1: '#1a1a1a',  // darkest
-            h2: '#2d2d2d',  // dark
-            h3: '#4a4a4a',  // mid
-            h4: '#7a7a7a',  // silver
-            h5: '#9a9a9a',  // bright silver
-            
-            // Eyes
-            ew: '#f0f0f0',  // white
-            ei: '#2d4a3a',  // iris green
-            ep: '#0a0a0a',  // pupil
-            eg: '#00ff88',  // glow (animated)
-            
-            // Toga
-            t1: '#f5f5f5',  // highlight
-            t2: '#e0e0e0',  // base
-            t3: '#c0c0c0',  // shadow
-            t4: '#a0a0a0',  // deep shadow
-            
-            // Gold
-            g1: '#ffd700',  // bright
-            g2: '#d4af37',  // base
-            g3: '#b8941c',  // shadow
-            g4: '#8b7a1a',  // dark
-            
-            // Pure
-            black: '#000000',
-            white: '#ffffff'
-        };
+        // Lighting setup - dramatic, Roman bust style
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+        scene.add(ambientLight);
         
-        // Animation state
-        let frame = 0;
+        // Key light (golden, from upper left)
+        const keyLight = new THREE.DirectionalLight(0xd4af37, 1.2);
+        keyLight.position.set(-5, 8, 5);
+        keyLight.castShadow = true;
+        keyLight.shadow.mapSize.width = 2048;
+        keyLight.shadow.mapSize.height = 2048;
+        scene.add(keyLight);
+        
+        // Fill light (cool, from right)
+        const fillLight = new THREE.DirectionalLight(0x88aaff, 0.4);
+        fillLight.position.set(5, 3, 5);
+        scene.add(fillLight);
+        
+        // Rim light (emerald accent)
+        const rimLight = new THREE.PointLight(0x00ff88, 0.6, 20);
+        rimLight.position.set(0, 2, -3);
+        scene.add(rimLight);
+        
+        // Materials
+        const skinMaterial = new THREE.MeshStandardMaterial({
+            color: 0xc79563,
+            roughness: 0.7,
+            metalness: 0.1,
+            emissive: 0x2a1a0a,
+            emissiveIntensity: 0.05
+        });
+        
+        const hairMaterial = new THREE.MeshStandardMaterial({
+            color: 0x1a1a1a,
+            roughness: 0.9,
+            metalness: 0.05
+        });
+        
+        const goldMaterial = new THREE.MeshStandardMaterial({
+            color: 0xd4af37,
+            roughness: 0.3,
+            metalness: 0.8,
+            emissive: 0xd4af37,
+            emissiveIntensity: 0.2
+        });
+        
+        const togaMaterial = new THREE.MeshStandardMaterial({
+            color: 0xe8e8e8,
+            roughness: 0.8,
+            metalness: 0.0
+        });
+        
+        const eyeMaterial = new THREE.MeshStandardMaterial({
+            color: 0x00ff88,
+            roughness: 0.2,
+            metalness: 0.1,
+            emissive: 0x00ff88,
+            emissiveIntensity: 0.5
+        });
+        
+        // Build the head
+        const head = new THREE.Group();
+        
+        // Main head sphere
+        const headGeometry = new THREE.SphereGeometry(1.2, 32, 32);
+        // Flatten the sides slightly for more realistic head shape
+        headGeometry.scale(0.85, 1, 1);
+        const headMesh = new THREE.Mesh(headGeometry, skinMaterial);
+        headMesh.castShadow = true;
+        headMesh.receiveShadow = true;
+        head.add(headMesh);
+        
+        // Jaw/chin (elongate the face)
+        const jawGeometry = new THREE.SphereGeometry(0.8, 32, 32);
+        jawGeometry.scale(0.9, 1.2, 0.9);
+        const jawMesh = new THREE.Mesh(jawGeometry, skinMaterial);
+        jawMesh.position.y = -0.8;
+        jawMesh.castShadow = true;
+        jawMesh.receiveShadow = true;
+        head.add(jawMesh);
+        
+        // Nose (strong Roman nose)
+        const noseGeometry = new THREE.CylinderGeometry(0.15, 0.2, 0.6, 8);
+        const noseMesh = new THREE.Mesh(noseGeometry, skinMaterial);
+        noseMesh.position.set(0, 0.1, 1);
+        noseMesh.rotation.x = Math.PI / 2;
+        noseMesh.castShadow = true;
+        head.add(noseMesh);
+        
+        // Eyes (glowing emerald)
+        const eyeGeometry = new THREE.SphereGeometry(0.12, 16, 16);
+        
+        const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+        leftEye.position.set(-0.35, 0.3, 0.9);
+        head.add(leftEye);
+        
+        const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+        rightEye.position.set(0.35, 0.3, 0.9);
+        head.add(rightEye);
+        
+        // Eye glow (point lights)
+        const leftEyeLight = new THREE.PointLight(0x00ff88, 0.8, 3);
+        leftEyeLight.position.copy(leftEye.position);
+        head.add(leftEyeLight);
+        
+        const rightEyeLight = new THREE.PointLight(0x00ff88, 0.8, 3);
+        rightEyeLight.position.copy(rightEye.position);
+        head.add(rightEyeLight);
+        
+        // Hair/top of head
+        const hairTopGeometry = new THREE.SphereGeometry(1.25, 32, 32, 0, Math.PI * 2, 0, Math.PI * 0.6);
+        hairTopGeometry.scale(0.88, 1, 1);
+        const hairTop = new THREE.Mesh(hairTopGeometry, hairMaterial);
+        hairTop.position.y = 0.3;
+        hairTop.castShadow = true;
+        head.add(hairTop);
+        
+        // Beard (volumetric, silver-streaked)
+        const beardGeometry = new THREE.SphereGeometry(0.7, 32, 32, 0, Math.PI * 2, Math.PI * 0.4, Math.PI * 0.6);
+        const beardMesh = new THREE.Mesh(beardGeometry, hairMaterial);
+        beardMesh.position.set(0, -0.6, 0.3);
+        beardMesh.scale.set(1, 1.3, 0.8);
+        beardMesh.castShadow = true;
+        head.add(beardMesh);
+        
+        // Laurel wreath crown
+        const wreath = new THREE.Group();
+        
+        // Main wreath band
+        const wreathBandGeometry = new THREE.TorusGeometry(1.1, 0.08, 8, 32, Math.PI * 1.5);
+        const wreathBand = new THREE.Mesh(wreathBandGeometry, goldMaterial);
+        wreathBand.rotation.x = -Math.PI / 12;
+        wreathBand.position.y = 0.8;
+        wreath.add(wreathBand);
+        
+        // Laurel leaves (small golden spheres around the wreath)
+        for (let i = 0; i < 20; i++) {
+            const angle = (Math.PI * 1.5 / 20) * i - Math.PI * 0.75;
+            const leafGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+            leafGeometry.scale(0.5, 1.5, 0.3);
+            const leaf = new THREE.Mesh(leafGeometry, goldMaterial);
+            
+            const radius = 1.1;
+            leaf.position.x = Math.cos(angle) * radius;
+            leaf.position.y = 0.8 + Math.sin(angle) * radius * 0.1;
+            leaf.position.z = Math.sin(angle) * radius;
+            
+            leaf.rotation.z = -angle;
+            leaf.rotation.y = Math.PI / 4;
+            
+            wreath.add(leaf);
+        }
+        
+        head.add(wreath);
+        
+        // Neck
+        const neckGeometry = new THREE.CylinderGeometry(0.5, 0.6, 1.2, 32);
+        const neckMesh = new THREE.Mesh(neckGeometry, skinMaterial);
+        neckMesh.position.y = -1.8;
+        neckMesh.castShadow = true;
+        neckMesh.receiveShadow = true;
+        head.add(neckMesh);
+        
+        // Shoulders/toga
+        const shoulderGeometry = new THREE.CylinderGeometry(1.5, 2, 1, 32);
+        const shoulderMesh = new THREE.Mesh(shoulderGeometry, togaMaterial);
+        shoulderMesh.position.y = -2.8;
+        shoulderMesh.castShadow = true;
+        shoulderMesh.receiveShadow = true;
+        head.add(shoulderMesh);
+        
+        // Gold clasp on toga
+        const claspGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+        const clasp = new THREE.Mesh(claspGeometry, goldMaterial);
+        clasp.position.set(0, -2.3, 1.5);
+        head.add(clasp);
+        
+        // Add head to scene
+        head.position.y = 1;
+        scene.add(head);
+        
+        // Pedestal (marble base)
+        const pedestalGeometry = new THREE.CylinderGeometry(2.5, 3, 0.5, 32);
+        const pedestalMaterial = new THREE.MeshStandardMaterial({
+            color: 0xcccccc,
+            roughness: 0.6,
+            metalness: 0.1
+        });
+        const pedestal = new THREE.Mesh(pedestalGeometry, pedestalMaterial);
+        pedestal.position.y = -3.5;
+        pedestal.receiveShadow = true;
+        scene.add(pedestal);
+        
+        // Floating particles (ancient dust)
+        const particleCount = 100;
+        const particlesGeometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        
+        for (let i = 0; i < particleCount * 3; i += 3) {
+            positions[i] = (Math.random() - 0.5) * 20;
+            positions[i + 1] = Math.random() * 10 - 5;
+            positions[i + 2] = (Math.random() - 0.5) * 20;
+        }
+        
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        
+        const particlesMaterial = new THREE.PointsMaterial({
+            color: 0xd4af37,
+            size: 0.05,
+            transparent: true,
+            opacity: 0.3,
+            blending: THREE.AdditiveBlending
+        });
+        
+        const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particles);
+        
+        // Animation
+        let time = 0;
         let blinkTimer = 0;
         
-        // Draw a single pixel
-        function px(x, y, color) {
-            if (x < 0 || x >= ART_WIDTH || y < 0 || y >= ART_HEIGHT) return;
-            ctx.fillStyle = color;
-            ctx.fillRect(x, y, 1, 1);
-        }
-        
-        // Draw horizontal line
-        function line(y, x1, x2, color) {
-            for (let x = x1; x <= x2; x++) {
-                px(x, y, color);
-            }
-        }
-        
-        // The portrait - hand-crafted pixel by pixel
-        function drawPortrait(blink = false) {
-            // Clear
-            ctx.fillStyle = P.bg1;
-            ctx.fillRect(0, 0, ART_WIDTH, ART_HEIGHT);
-            
-            // Background gradient effect
-            const grad = ctx.createRadialGradient(32, 30, 10, 32, 40, 50);
-            grad.addColorStop(0, P.bg3);
-            grad.addColorStop(1, P.bg1);
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, ART_WIDTH, ART_HEIGHT);
-            
-            // CENTER: x=32 (0-63 range)
-            const cx = 32;
-            
-            // === LAUREL WREATH (top) ===
-            // Golden crown/wreath
-            let y = 8;
-            line(y, cx-12, cx-10, P.g3);
-            line(y, cx-9, cx-7, P.g2);
-            line(y, cx-6, cx-4, P.g1);
-            line(y, cx-3, cx-1, P.g2);
-            line(y, cx, cx+1, P.g1);
-            line(y, cx+2, cx+4, P.g2);
-            line(y, cx+5, cx+7, P.g1);
-            line(y, cx+8, cx+10, P.g2);
-            line(y, cx+11, cx+13, P.g3);
-            
-            y = 9;
-            px(cx-13, y, P.g4);
-            px(cx-11, y, P.g2);
-            px(cx-8, y, P.g1);
-            px(cx-5, y, P.g2);
-            px(cx-2, y, P.g1);
-            px(cx, y, P.g2);
-            px(cx+2, y, P.g1);
-            px(cx+5, y, P.g2);
-            px(cx+8, y, P.g1);
-            px(cx+11, y, P.g2);
-            px(cx+13, y, P.g4);
-            
-            // === HEAD/HAIR ===
-            y = 10;
-            line(y, cx-14, cx-12, P.h1);
-            line(y, cx-11, cx-5, P.h2);
-            px(cx-6, y, P.h4);  // silver streak
-            line(y, cx-4, cx+4, P.h2);
-            px(cx+6, y, P.h4);  // silver streak
-            line(y, cx+5, cx+11, P.h2);
-            line(y, cx+12, cx+14, P.h1);
-            
-            y = 11;
-            line(y, cx-15, cx-13, P.h1);
-            line(y, cx-12, cx+12, P.h2);
-            line(y, cx+13, cx+15, P.h1);
-            
-            // Hairline/forehead transition
-            y = 12;
-            line(y, cx-15, cx-14, P.h2);
-            line(y, cx-13, cx-11, P.h3);
-            line(y, cx-10, cx-6, P.s3);
-            line(y, cx-5, cx+5, P.s2);
-            line(y, cx+6, cx+10, P.s3);
-            line(y, cx+11, cx+13, P.h3);
-            line(y, cx+14, cx+15, P.h2);
-            
-            // === FOREHEAD ===
-            y = 13;
-            line(y, cx-14, cx-12, P.h3);
-            line(y, cx-11, cx-7, P.s3);
-            line(y, cx-6, cx+6, P.s1);
-            line(y, cx+7, cx+11, P.s3);
-            line(y, cx+12, cx+14, P.h3);
-            
-            y = 14;
-            line(y, cx-13, cx-11, P.s4);
-            line(y, cx-10, cx-6, P.s2);
-            line(y, cx-5, cx+5, P.s1);
-            line(y, cx+6, cx+10, P.s2);
-            line(y, cx+11, cx+13, P.s4);
-            
-            y = 15;
-            line(y, cx-12, cx-8, P.s3);
-            line(y, cx-7, cx+7, P.s2);
-            line(y, cx+8, cx+12, P.s3);
-            
-            // === UPPER FACE (brow area) ===
-            y = 16;
-            line(y, cx-11, cx-9, P.s4);
-            line(y, cx-8, cx-4, P.s3);
-            line(y, cx-3, cx+3, P.s2);
-            line(y, cx+4, cx+8, P.s3);
-            line(y, cx+9, cx+11, P.s4);
-            
-            y = 17;  // Brow ridge
-            px(cx-10, y, P.s5);
-            line(y, cx-9, cx-7, P.s4);
-            line(y, cx-6, cx-4, P.s3);
-            line(y, cx-3, cx+3, P.s2);
-            line(y, cx+4, cx+6, P.s3);
-            line(y, cx+7, cx+9, P.s4);
-            px(cx+10, y, P.s5);
-            
-            // === EYES ===
-            y = 18;  // Upper eyelid
-            px(cx-9, y, P.s4);
-            line(y, cx-8, cx-6, P.s3);
-            line(y, cx-5, cx+5, P.s2);
-            line(y, cx+6, cx+8, P.s3);
-            px(cx+9, y, P.s4);
-            
-            // Left eye
-            y = 19;
-            px(cx-9, y, P.s5);
-            if (!blink) {
-                px(cx-8, y, P.ew);
-                px(cx-7, y, P.ei);
-                px(cx-6, y, P.ep);
-            } else {
-                line(y, cx-8, cx-6, P.s4);
-            }
-            
-            // Between eyes
-            line(y, cx-5, cx-1, P.s2);
-            
-            // Right eye
-            if (!blink) {
-                px(cx+6, y, P.ep);
-                px(cx+7, y, P.ei);
-                px(cx+8, y, P.ew);
-            } else {
-                line(y, cx+6, cx+8, P.s4);
-            }
-            px(cx+9, y, P.s5);
-            
-            // Eye glow (if open)
-            if (!blink) {
-                const glowIntensity = 0.3 + Math.sin(frame * 0.05) * 0.2;
-                ctx.globalAlpha = glowIntensity;
-                px(cx-7, y-1, P.eg);
-                px(cx+7, y-1, P.eg);
-                ctx.globalAlpha = 1.0;
-            }
-            
-            y = 20;  // Lower eyelid
-            px(cx-9, y, P.s4);
-            line(y, cx-8, cx-6, P.s3);
-            line(y, cx-5, cx+5, P.s2);
-            line(y, cx+6, cx+8, P.s3);
-            px(cx+9, y, P.s4);
-            
-            // === NOSE ===
-            y = 21;
-            line(y, cx-8, cx-6, P.s3);
-            line(y, cx-5, cx+5, P.s2);
-            line(y, cx+6, cx+8, P.s3);
-            
-            y = 22;  // Nose bridge
-            line(y, cx-7, cx-5, P.s3);
-            line(y, cx-4, cx, P.s2);
-            px(cx, y, P.s3);  // Nose line
-            line(y, cx+1, cx+4, P.s2);
-            line(y, cx+5, cx+7, P.s3);
-            
-            y = 23;
-            line(y, cx-6, cx-4, P.s3);
-            line(y, cx-3, cx-1, P.s2);
-            px(cx, y, P.s3);
-            line(y, cx+1, cx+3, P.s2);
-            line(y, cx+4, cx+6, P.s3);
-            
-            y = 24;  // Nose tip
-            line(y, cx-5, cx-3, P.s3);
-            px(cx-2, y, P.s2);
-            px(cx-1, y, P.s1);
-            px(cx, y, P.s2);
-            px(cx+1, y, P.s1);
-            px(cx+2, y, P.s2);
-            line(y, cx+3, cx+5, P.s3);
-            
-            y = 25;  // Nostrils
-            line(y, cx-4, cx-2, P.s4);
-            px(cx-2, y, P.s5);
-            px(cx-1, y, P.s3);
-            px(cx, y, P.s2);
-            px(cx+1, y, P.s3);
-            px(cx+2, y, P.s5);
-            line(y, cx+2, cx+4, P.s4);
-            
-            // === UPPER LIP / PHILTRUM ===
-            y = 26;
-            line(y, cx-3, cx-1, P.s3);
-            px(cx, y, P.s4);
-            line(y, cx+1, cx+3, P.s3);
-            
-            y = 27;
-            line(y, cx-4, cx-2, P.s3);
-            line(y, cx-1, cx+1, P.s4);
-            line(y, cx+2, cx+4, P.s3);
-            
-            // === MOUTH ===
-            y = 28;  // Upper lip
-            line(y, cx-6, cx-5, P.s4);
-            line(y, cx-4, cx-2, P.s3);
-            px(cx-1, y, P.s5);
-            px(cx, y, P.black);
-            px(cx+1, y, P.s5);
-            line(y, cx+2, cx+4, P.s3);
-            line(y, cx+5, cx+6, P.s4);
-            
-            y = 29;  // Mouth line (stoic, firm)
-            px(cx-5, y, P.s5);
-            line(y, cx-4, cx-1, P.black);
-            line(y, cx+1, cx+4, P.black);
-            px(cx+5, y, P.s5);
-            
-            y = 30;  // Lower lip
-            line(y, cx-5, cx-4, P.s4);
-            line(y, cx-3, cx-1, P.s3);
-            px(cx, y, P.s4);
-            line(y, cx+1, cx+3, P.s3);
-            line(y, cx+4, cx+5, P.s4);
-            
-            // === CHIN ===
-            y = 31;
-            line(y, cx-6, cx-5, P.s4);
-            line(y, cx-4, cx+4, P.s3);
-            line(y, cx+5, cx+6, P.s4);
-            
-            y = 32;
-            line(y, cx-7, cx-6, P.s5);
-            line(y, cx-5, cx+5, P.s3);
-            line(y, cx+6, cx+7, P.s5);
-            
-            // === BEARD (well-groomed, silver-streaked) ===
-            y = 33;
-            px(cx-8, y, P.h2);
-            line(y, cx-7, cx-5, P.s4);
-            line(y, cx-4, cx+4, P.s3);
-            line(y, cx+5, cx+7, P.s4);
-            px(cx+8, y, P.h2);
-            
-            y = 34;
-            line(y, cx-9, cx-8, P.h2);
-            line(y, cx-7, cx-5, P.h3);
-            px(cx-4, y, P.h4);  // silver
-            line(y, cx-3, cx+3, P.h2);
-            px(cx+4, y, P.h4);  // silver
-            line(y, cx+5, cx+7, P.h3);
-            line(y, cx+8, cx+9, P.h2);
-            
-            y = 35;
-            line(y, cx-10, cx-9, P.h2);
-            line(y, cx-8, cx-6, P.h2);
-            px(cx-5, y, P.h3);
-            line(y, cx-4, cx+4, P.h2);
-            px(cx+5, y, P.h3);
-            line(y, cx+6, cx+8, P.h2);
-            line(y, cx+9, cx+10, P.h2);
-            
-            y = 36;
-            line(y, cx-10, cx-8, P.h1);
-            px(cx-7, y, P.h4);
-            line(y, cx-6, cx+6, P.h2);
-            px(cx+7, y, P.h4);
-            line(y, cx+8, cx+10, P.h1);
-            
-            y = 37;
-            line(y, cx-11, cx-9, P.h2);
-            line(y, cx-8, cx+8, P.h2);
-            line(y, cx+9, cx+11, P.h2);
-            
-            y = 38;
-            line(y, cx-11, cx-10, P.h2);
-            px(cx-9, y, P.h3);
-            line(y, cx-8, cx-6, P.h2);
-            px(cx-5, y, P.h4);
-            line(y, cx-4, cx+4, P.h2);
-            px(cx+5, y, P.h4);
-            line(y, cx+6, cx+8, P.h2);
-            px(cx+9, y, P.h3);
-            line(y, cx+10, cx+11, P.h2);
-            
-            // === NECK ===
-            y = 39;
-            line(y, cx-10, cx-9, P.h3);
-            line(y, cx-8, cx-6, P.s4);
-            line(y, cx-5, cx+5, P.s3);
-            line(y, cx+6, cx+8, P.s4);
-            line(y, cx+9, cx+10, P.h3);
-            
-            y = 40;
-            line(y, cx-9, cx-7, P.s4);
-            line(y, cx-6, cx+6, P.s3);
-            line(y, cx+7, cx+9, P.s4);
-            
-            y = 41;
-            line(y, cx-8, cx-7, P.s5);
-            line(y, cx-6, cx+6, P.s3);
-            line(y, cx+7, cx+8, P.s5);
-            
-            y = 42;
-            line(y, cx-7, cx+7, P.s4);
-            
-            // === SHOULDERS / TOGA ===
-            y = 43;
-            line(y, cx-9, cx-8, P.s5);
-            line(y, cx-7, cx-5, P.s4);
-            line(y, cx-4, cx+4, P.s3);
-            line(y, cx+5, cx+7, P.s4);
-            line(y, cx+8, cx+9, P.s5);
-            
-            // Toga begins
-            y = 44;
-            line(y, cx-12, cx-10, P.t3);
-            line(y, cx-9, cx-7, P.t2);
-            line(y, cx-6, cx+6, P.t1);
-            line(y, cx+7, cx+9, P.t2);
-            line(y, cx+10, cx+12, P.t3);
-            
-            y = 45;
-            line(y, cx-14, cx-12, P.t4);
-            line(y, cx-11, cx-9, P.t3);
-            line(y, cx-8, cx+8, P.t1);
-            line(y, cx+9, cx+11, P.t3);
-            line(y, cx+12, cx+14, P.t4);
-            
-            // Gold clasp
-            px(cx, y+1, P.g1);
-            px(cx-1, y+1, P.g2);
-            px(cx+1, y+1, P.g2);
-            
-            // Continue toga to bottom
-            for (let row = 46; row < 80; row++) {
-                const width = 15 + (row - 46) * 0.8;
-                const start = cx - Math.floor(width / 2);
-                const end = cx + Math.floor(width / 2);
-                
-                // Left side (shadowed)
-                line(row, start, start + Math.floor(width * 0.3), P.t3);
-                // Center (highlighted)
-                line(row, start + Math.floor(width * 0.3), end - Math.floor(width * 0.3), P.t1);
-                // Right side
-                line(row, end - Math.floor(width * 0.3), end, P.t2);
-                
-                // Folds
-                if (row % 4 === 0) {
-                    px(start + 3, row, P.t4);
-                    px(end - 3, row, P.t4);
-                }
-            }
-        }
-        
-        // Animation loop
         function animate() {
-            frame++;
+            requestAnimationFrame(animate);
+            time += 0.01;
             
-            // Blink timing (every ~4 seconds, 3-frame blink)
+            // Subtle head rotation (breathing/life)
+            head.rotation.y = Math.sin(time * 0.3) * 0.05;
+            head.rotation.x = Math.sin(time * 0.2) * 0.02;
+            head.position.y = 1 + Math.sin(time * 0.5) * 0.03;
+            
+            // Eye glow pulse
+            const glowIntensity = 0.6 + Math.sin(time * 2) * 0.2;
+            leftEyeLight.intensity = glowIntensity;
+            rightEyeLight.intensity = glowIntensity;
+            eyeMaterial.emissiveIntensity = 0.3 + Math.sin(time * 2) * 0.2;
+            
+            // Blinking
             blinkTimer++;
-            const shouldBlink = (blinkTimer > 240 && blinkTimer < 244);
+            if (blinkTimer > 200 && blinkTimer < 210) {
+                leftEye.scale.y = 0.1;
+                rightEye.scale.y = 0.1;
+            } else {
+                leftEye.scale.y = 1;
+                rightEye.scale.y = 1;
+            }
             if (blinkTimer > 300) blinkTimer = 0;
             
-            drawPortrait(shouldBlink);
+            // Rotate particles
+            particles.rotation.y += 0.0002;
+            const positions = particles.geometry.attributes.position.array;
+            for (let i = 1; i < positions.length; i += 3) {
+                positions[i] += 0.002;
+                if (positions[i] > 5) positions[i] = -5;
+            }
+            particles.geometry.attributes.position.needsUpdate = true;
             
-            requestAnimationFrame(animate);
+            // Rim light oscillation
+            rimLight.intensity = 0.4 + Math.sin(time * 1.5) * 0.2;
+            
+            renderer.render(scene, camera);
         }
+        
+        // Handle resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
         
         animate();
     </script>
