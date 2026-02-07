@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROMULUS 🏛️</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: radial-gradient(circle at center, #0f0f0f 0%, #000000 100%);
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: #fff;
+        }
+        
+        #container {
+            text-align: center;
+            max-width: 90vw;
+        }
+        
+        #bust-container {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 40px;
+        }
+        
+        #bust {
+            max-width: min(600px, 80vw);
+            height: auto;
+            filter: 
+                drop-shadow(0 0 60px rgba(0, 255, 136, 0.3))
+                contrast(1.1)
+                brightness(1.05);
+            animation: breathe 4s ease-in-out infinite;
+        }
+        
+        @keyframes breathe {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-8px) scale(1.01); }
+        }
+        
+        #eye-glow {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            mix-blend-mode: screen;
+            opacity: 0.7;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.9; }
+        }
+        
+        h1 {
+            font-size: clamp(32px, 8vw, 72px);
+            letter-spacing: 0.2em;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #d4af37 0%, #f5e6c8 50%, #d4af37 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.85; }
+        }
+        
+        .subtitle {
+            font-size: clamp(12px, 2.5vw, 18px);
+            letter-spacing: 0.4em;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 40px;
+            text-transform: uppercase;
+        }
+        
+        .status {
+            font-size: clamp(11px, 2vw, 14px);
+            letter-spacing: 0.3em;
+            color: rgba(0, 255, 136, 0.6);
+            margin-top: 40px;
+        }
+        
+        .status::before {
+            content: '◆ ';
+            color: #00ff88;
+        }
+        
+        .status::after {
+            content: ' ◆';
+            color: #00ff88;
+        }
+        
+        #stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: twinkle 3s ease-in-out infinite;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+        }
+        
+        #placeholder {
+            width: min(600px, 80vw);
+            height: min(750px, 100vh - 300px);
+            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            margin-bottom: 40px;
+        }
+        
+        #placeholder h2 {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: clamp(16px, 3vw, 24px);
+            margin-bottom: 20px;
+            letter-spacing: 0.1em;
+        }
+        
+        #placeholder p {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: clamp(12px, 2vw, 16px);
+            line-height: 1.8;
+            max-width: 500px;
+            letter-spacing: 0.05em;
+        }
+        
+        #placeholder code {
+            display: block;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 4px;
+            color: #00ff88;
+            font-size: clamp(11px, 1.8vw, 14px);
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div id="stars"></div>
+    
+    <div id="container">
+        <h1>ROMULUS</h1>
+        
+        <div class="subtitle">
+            Consigliere · Engineer · Guardian
+        </div>
+        
+        <!-- BUST IMAGE GOES HERE -->
+        <div id="bust-container">
+            <img id="bust" src="romulus-bust-pixel.png" alt="Romulus Bust">
+            <canvas id="eye-glow"></canvas>
+            
+            <!-- PLACEHOLDER (remove when image ready) -->
+            <div id="placeholder" style="display:none;">
+                <h2>BUST IMAGE PLACEHOLDER</h2>
+                <p>
+                    Replace this with a high-quality AI-generated or commissioned Roman marble bust.
+                </p>
+                <code>
+                    Recommended tools:<br>
+                    • media.io/ai/image-to-image/ai-statue-generator<br>
+                    • easy-peasy.ai (text-to-image)<br>
+                    • photosstyle.com/art/photo-to-sculpture
+                </code>
+                <p style="margin-top: 20px;">
+                    Save image as <strong style="color: #00ff88;">romulus-bust-pixel.png</strong><br>
+                    Uncomment img tag above when ready
+                </p>
+            </div>
+        </div>
+        
+        <div class="status">
+            ACTIVE · MONITORING · ONLINE
+        </div>
+    </div>
+    
+    <script>
+        // Generate sparse star field
+        const starsContainer = document.getElementById('stars');
+        const starCount = 50;
+        
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            star.style.width = (Math.random() * 2 + 1) + 'px';
+            star.style.height = star.style.width;
+            starsContainer.appendChild(star);
+        }
+        
+        // Eye glow effect (when image is loaded)
+        const canvas = document.getElementById('eye-glow');
+        const ctx = canvas.getContext('2d');
+        const bust = document.getElementById('bust');
+        
+        bust.addEventListener('load', () => {
+            canvas.width = bust.width;
+            canvas.height = bust.height;
+            
+            // Draw emerald glow at eye positions (adjust coordinates as needed)
+            const leftEyeX = bust.width * 0.38;
+            const rightEyeX = bust.width * 0.62;
+            const eyeY = bust.height * 0.35;
+            
+            function drawEyeGlow() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                const intensity = 0.5 + Math.sin(Date.now() * 0.002) * 0.3;
+                
+                // Left eye glow
+                const leftGradient = ctx.createRadialGradient(
+                    leftEyeX, eyeY, 0,
+                    leftEyeX, eyeY, 80
+                );
+                leftGradient.addColorStop(0, `rgba(0, 255, 136, ${intensity})`);
+                leftGradient.addColorStop(0.5, `rgba(0, 255, 136, ${intensity * 0.3})`);
+                leftGradient.addColorStop(1, 'rgba(0, 255, 136, 0)');
+                
+                ctx.fillStyle = leftGradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Right eye glow
+                const rightGradient = ctx.createRadialGradient(
+                    rightEyeX, eyeY, 0,
+                    rightEyeX, eyeY, 80
+                );
+                rightGradient.addColorStop(0, `rgba(0, 255, 136, ${intensity})`);
+                rightGradient.addColorStop(0.5, `rgba(0, 255, 136, ${intensity * 0.3})`);
+                rightGradient.addColorStop(1, 'rgba(0, 255, 136, 0)');
+                
+                ctx.fillStyle = rightGradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                requestAnimationFrame(drawEyeGlow);
+            }
+            
+            drawEyeGlow();
+        });
+    </script>
+</body>
+</html>
