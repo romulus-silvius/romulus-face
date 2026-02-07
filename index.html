@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROMULUS 🏛️</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0a0a0a;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+        }
+        
+        canvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+        
+        #title {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #d4af37;
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 8px;
+            text-shadow: 0 0 10px #d4af37;
+            z-index: 10;
+        }
+        
+        #subtitle {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #888;
+            font-size: 14px;
+            letter-spacing: 2px;
+            z-index: 10;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="title">ROMULUS</div>
+    <div id="subtitle">
+        CONSIGLIERE · ENGINEER · BUILDER OF SYSTEMS<br>
+        🏛️ NAMED FOR THE FOUNDER OF ROME 🏛️
+    </div>
+    <canvas id="canvas"></canvas>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas to full screen
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        // Pixel scale factor
+        const PIXEL_SIZE = 8;
+        const COLS = Math.floor(canvas.width / PIXEL_SIZE);
+        const ROWS = Math.floor(canvas.height / PIXEL_SIZE);
+        
+        // Colors - Roman palette
+        const MARBLE = '#e8e8e8';
+        const SHADOW = '#4a4a4a';
+        const GOLD = '#d4af37';
+        const FLAME = '#ff6b35';
+        const DARK = '#1a1a1a';
+        const EYE_GLOW = '#00ff88';
+        
+        // Animation state
+        let time = 0;
+        let blinkTimer = 0;
+        let breathePhase = 0;
+        
+        // Roman bust pixel art (simplified stoic face)
+        // Center positioned, symmetrical
+        const FACE_WIDTH = 40;
+        const FACE_HEIGHT = 50;
+        const START_X = Math.floor(COLS / 2 - FACE_WIDTH / 2);
+        const START_Y = Math.floor(ROWS / 2 - FACE_HEIGHT / 2);
+        
+        // Generate marble background texture
+        function drawMarbleBackground() {
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    const noise = Math.sin(x * 0.1 + time * 0.001) * 
+                                 Math.cos(y * 0.1 + time * 0.0015) * 20;
+                    const brightness = 10 + noise;
+                    const color = `rgb(${brightness}, ${brightness}, ${brightness})`;
+                    
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+                }
+            }
+        }
+        
+        // Draw the Roman bust
+        function drawBust() {
+            const breatheOffset = Math.sin(breathePhase) * 2;
+            const eyesOpen = blinkTimer < 3;
+            
+            // Head outline (simplified Roman bust shape)
+            drawPixelRect(START_X + 10, START_Y + 5, 20, 25, MARBLE);
+            
+            // Forehead/crown area (wider)
+            drawPixelRect(START_X + 8, START_Y + 5, 24, 8, MARBLE);
+            
+            // Jawline narrowing
+            drawPixelRect(START_X + 12, START_Y + 28, 16, 4, MARBLE);
+            drawPixelRect(START_X + 14, START_Y + 32, 12, 3, MARBLE);
+            
+            // Neck/shoulders (bust base)
+            drawPixelRect(START_X + 5, START_Y + 35, 30, 8, MARBLE);
+            drawPixelRect(START_X + 2, START_Y + 43, 36, 7, MARBLE);
+            
+            // Face details
+            // Eyes (glowing)
+            if (eyesOpen) {
+                const flicker = Math.random() > 0.95 ? FLAME : EYE_GLOW;
+                drawPixel(START_X + 15, START_Y + 15, flicker);
+                drawPixel(START_X + 24, START_Y + 15, flicker);
+                // Eye glow
+                drawPixel(START_X + 15, START_Y + 14, `${EYE_GLOW}66`);
+                drawPixel(START_X + 24, START_Y + 14, `${EYE_GLOW}66`);
+            } else {
+                // Closed eyes (blink)
+                drawPixel(START_X + 15, START_Y + 15, SHADOW);
+                drawPixel(START_X + 24, START_Y + 15, SHADOW);
+            }
+            
+            // Nose (simple line)
+            drawPixel(START_X + 20, START_Y + 18, SHADOW);
+            drawPixel(START_X + 20, START_Y + 19, SHADOW);
+            drawPixel(START_X + 20, START_Y + 20, SHADOW);
+            
+            // Mouth (stoic line)
+            drawPixelRect(START_X + 17, START_Y + 24, 6, 1, SHADOW);
+            
+            // Shadows for depth
+            drawPixelRect(START_X + 10, START_Y + 30, 2, 3, SHADOW);
+            drawPixelRect(START_X + 28, START_Y + 30, 2, 3, SHADOW);
+            
+            // Crown/laurel wreath (golden)
+            drawPixelRect(START_X + 8, START_Y + 4, 24, 2, GOLD);
+            drawPixel(START_X + 7, START_Y + 5, GOLD);
+            drawPixel(START_X + 32, START_Y + 5, GOLD);
+            
+            // Shoulder drape/toga detail
+            drawPixelRect(START_X + 2, START_Y + 43, 3, 3, GOLD);
+            drawPixelRect(START_X + 35, START_Y + 43, 3, 3, GOLD);
+        }
+        
+        // Floating particles (ancient dust motes)
+        const particles = [];
+        for (let i = 0; i < 30; i++) {
+            particles.push({
+                x: Math.random() * COLS,
+                y: Math.random() * ROWS,
+                speed: 0.05 + Math.random() * 0.1,
+                brightness: 100 + Math.random() * 100
+            });
+        }
+        
+        function updateParticles() {
+            particles.forEach(p => {
+                p.y -= p.speed;
+                if (p.y < 0) p.y = ROWS;
+                
+                const color = `rgba(${p.brightness}, ${p.brightness}, ${p.brightness}, 0.3)`;
+                ctx.fillStyle = color;
+                ctx.fillRect(p.x * PIXEL_SIZE, p.y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+            });
+        }
+        
+        // Helper: draw a pixel
+        function drawPixel(x, y, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+        }
+        
+        // Helper: draw a rectangle of pixels
+        function drawPixelRect(x, y, w, h, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x * PIXEL_SIZE, y * PIXEL_SIZE, w * PIXEL_SIZE, h * PIXEL_SIZE);
+        }
+        
+        // Animation loop
+        function animate() {
+            time++;
+            breathePhase += 0.02;
+            
+            // Blink occasionally
+            blinkTimer++;
+            if (blinkTimer > 200 && Math.random() > 0.98) {
+                blinkTimer = 0;
+            }
+            
+            // Clear and redraw
+            drawMarbleBackground();
+            updateParticles();
+            drawBust();
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Handle resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+        
+        // Start
+        animate();
+    </script>
+</body>
+</html>
